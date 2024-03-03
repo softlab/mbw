@@ -1,12 +1,22 @@
 MBW determines the "copy" memory bandwidth available to userspace programs. Its simplistic approach models that of real applications. It is not tuned to extremes and it is not aware of hardware architecture, just like your average software package.
 
+This is the fork of original raas/mbw project (https://github.com/raas/mbw)
+
+Features I'd added:
+
+    * Added ability to run several threads simulatenoulsly
+    * Better output control
+
+
 2006, 2012 Andras.Horvath atnospam gmail.com
 2013 j.m.slocum atnospam gmail.com
 2022 Willian.Zhang
+2024 Yurii Ingultsov
 
 http://github.com/raas/mbw
 https://github.com/Willian-Zhang/mbw
 
+'mwb -t 4 512' to run 4 threads simulatenously
 'mbw 1000' to run copy memory test on all methods with 1 GiB memory.
 'mbw -h' for help
 
