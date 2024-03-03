@@ -1,6 +1,6 @@
 Summary: Memory bandwidth benchmark
 Name: mbw
-Version: 2.0
+Version: 3.0
 Release: 1%{?dist}
 License: GPL-3.0-or-later
 Buildroot: %{_tmppath}/%{name}-buildroot
@@ -33,6 +33,11 @@ rm -rf %{buildroot}
 %attr(644,-,-) %{_mandir}/man1/mbw.1.gz
 
 %changelog
+* Sun March 03 2024 Yurii Ingultsov <yuri@softlab.in.ua> 3.0.0
+- added ability to run seleral threads simultaneously. 
+- print behavior chamhed (quiet/verbose/avg)
+- command line optons added/changed/renamed to adopt new features and for better mnemonic (I think)
+
 * Mon Apr 17 2023 Andras Horvath <andras.horvath@gmail.com> 2.0-1
 - Migrated to GPLv3 license
 - Small build fixes and cleanups

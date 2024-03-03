@@ -15,15 +15,24 @@ determines available memory bandwidth by copying large arrays of data in memory.
 .SH OPTIONS
 .B
 .IP -q
-Quiet; suppress informational messages.
+Quiet; so not prins messages after each test iteration.
 .B
 .IP -a
 Suppress printing the average of each test.
+.B
+.IP -v
+Verbose; Prinns more information.
 .B
 .IP "\-n <number>"
 Select number of loops per test
 .B
 .IP "\-t <number>"
+Specifies number of threads to run 
+.B
+.IP "\-f"
+Force; Allows to run in event if required memory size (2 * num threads * size) exceeds the size of available physical memory
+.B
+.IP "\-m <number>"
 Select tests to be run. If no -t parameters are given the default is to run all tests. -t0: memcpy() test, -t1: dumb (b[i]=a[i] style) test, -t2: memcpy() with arbitrary block size
 .B
 .IP "\-b <bytes>"
