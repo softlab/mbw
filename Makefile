@@ -2,7 +2,14 @@
 NAME=mbw
 TARFILE=${NAME}.tar.gz
 
-mbw: mbw.c
+.s.o:
+	$(CC) -c -o $@ $<
+
+.c.o:
+	$(CC) -c -O3 -Ofast -D__AVX128__ -D__AVX256__ -o $@ $<
+
+mbw: mbw.o mc32nt4p_s.o
+	$(CC) -o $@ $^
 
 clean:
 	rm -f mbw
