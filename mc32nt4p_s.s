@@ -1,3 +1,6 @@
+#    (C) Yurii Ingultsov <yuri@softlab.in.ua>
+#
+#
     .global mc32nt4p_s
     .text
 mc32nt4p_s:

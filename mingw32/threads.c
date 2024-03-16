@@ -1,3 +1,4 @@
+//# (C) Yurii Ingultsov <yuri@softlab.in.ua>
 
 #include <windows.h>
 

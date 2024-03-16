@@ -1,6 +1,8 @@
 # ifndef __MBW_H__
 # define __MBW_H__
 
+//# (C) Yurii Ingultsov <yuri@softlab.in.ua>
+
 #include <stddef.h>
 
 #if defined(__GLIBC__)

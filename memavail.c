@@ -1,3 +1,4 @@
+//# (C) Yurii Ingultsov <yuri@softlab.in.ua>
 #if defined(__MSVCRT__)
     #include <windows.h>
 #endif

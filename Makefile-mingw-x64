@@ -1,4 +1,12 @@
+# (C) Yurii Ingultsov <yuri@softlab.in.ua>
+# Cross compile linux x64 -> win32 x64
+# requires ming-w64 gcc compiles. On ubuntu based systems you maye setup it as
+# $ sudo apt intall mingw-w64 
+# for other platforms see: https://www.mingw-w64.org/downloads/#ubuntu
+#
+
 .PHONY: all
+
 
 
 NAME=mbw-mingw.exe

@@ -1,5 +1,7 @@
 # ifndef __THREADS_H__
 # define __THREADS_H__
+//# (C) Yurii Ingultsov <yuri@softlab.in.ua>
+
 
 # define USE_BEGIN_THREAD
 #if defined( USE_BEGIN_THREAD_EX ) 
