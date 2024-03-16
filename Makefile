@@ -19,6 +19,8 @@ $(NAME): mbw.o memavail.o mc32nt4p_s.o
 
 clean:
 	-rm -f *.o
+
+clean-all: clean	
 	-rm -f ${NAME}
 	-rm -f ${NAME}.tar.gz
 

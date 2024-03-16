@@ -1,7 +1,7 @@
 .PHONY: all
 
 
-NAME=mbw.exe
+NAME=mbw-mingw.exe
 TARFILE=${NAME}.tar.gz
 
 CC=x86_64-w64-mingw32-gcc
@@ -27,6 +27,8 @@ all: ${NAME}
 clean:
 	-rm -f *.o
 	-rm -f mingw32/*.0
+
+clean-all: clean	
 	-rm -f ${NAME}
 	-rm -f ${NAME}.tar.gz
 
