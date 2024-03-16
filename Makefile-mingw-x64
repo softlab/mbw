@@ -1,0 +1,37 @@
+.PHONY: all
+
+
+NAME=mbw.exe
+TARFILE=${NAME}.tar.gz
+
+CC=x86_64-w64-mingw32-gcc
+CF=-m64 -std=c11 -Wall
+OPT=-O3 -Ofast 
+#Windows.h
+#DEFS=-I"/home/yurii/.wine/drive_c/Program Files (x86)/Windows Kits/10/Include/10.0.22621.0/um/" \
+#  -I"/home/yurii/.wine/drive_c/Program Files (x86)/Windows Kits/10/Include/10.0.22621.0/shared/" \
+   -D__AVX256__
+DEFS=-I/usr/share/mingw-w64/include/ -D__AVX256__
+LINK=-L/usr/x86_64-w64-mingw32/lib
+.s.o:
+	$(CC) -c -o $@ $<
+
+.c.o:
+	$(CC) $(CF) $(OPT) $(DEFS) -c -o $@ $<
+
+${NAME}: mbw.o memavail.o mc32nt4p_s.o mingw32/threads.o
+	$(CC) $(LINK) -o $@  $^ 
+
+all: ${NAME}
+
+clean:
+	-rm -f *.o
+	-rm -f mingw32/*.0
+	-rm -f ${NAME}
+	-rm -f ${NAME}.tar.gz
+
+${TARFILE}: clean
+	 tar cCzf .. ${NAME}.tar.gz --exclude-vcs ${NAME} || true
+
+rpm: ${TARFILE}
+	 rpmbuild -ta ${NAME}.tar.gz 

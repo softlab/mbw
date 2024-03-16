@@ -3,17 +3,6 @@
  */
 #define _GNU_SOURCE
 
-//#ifdef __GNUC__
-//gcc -mavx2 -dM -E - < /dev/null | egrep "SSE|AVX" | sort
-//    #ifdef __AVX__
-//        #define __AVX128__
-//    #endif
-//    #ifdef __AVX2__
-//        #define __AVX256__
-//    #endif    
-//#endif
-
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -23,24 +12,18 @@
 #include <time.h>
 #include <string.h>
 #include <unistd.h>
-
-#include <threads.h>
 #include <stdatomic.h>
-
 #include <stdint.h>
 #if defined(__AVX256__) || defined(__AVX128__)
 #include <x86intrin.h>
 #include <emmintrin.h>
 #endif
 
-/* 
-    AVX 265
-    copies by 4 of 4k pages, 
-    into every page copies by 64 bytes (64 moves/page) chunks. (64 loops per page) ymm0.1, ... ymm6..7
-    prefetch every chunk at every loop
-*/
-__attribute__ ((sysv_abi))  // same as above but but uses 4 of 4k paghes
-size_t mc32nt4p_s(void * restrict dst, const void * restrict src, size_t sz) __nonnull ((1, 2));
+#include "mbw.h"
+
+
+THREAD_ABI thrdret_t worker_thread(void *v);
+
 
 
 /* how many runs to average by default */
@@ -147,7 +130,7 @@ long *make_array(unsigned long long asize)
     long *a;
 
 
-    size_t alingnment = sizeof(sizeof(long));
+    size_t alingnment = sizeof(long);
     /* let's C optiizer remove extra code at compile time ;)  */
 #ifdef __AVX128__
     alingnment = sizeof(__m128i);
@@ -155,7 +138,7 @@ long *make_array(unsigned long long asize)
 #ifdef __AVX256__
     alingnment = sizeof(__m256i);
 #endif    
-    size_t byte_size = asize* sizeof(long);
+    size_t byte_size = asize*sizeof(long);
 
     a = aligned_alloc(  alingnment, byte_size );
     if(NULL==a) {
@@ -165,7 +148,13 @@ long *make_array(unsigned long long asize)
 
     /* make sure both arrays are allocated, fill with pattern */
     for(t=0; t<asize; t++) {
-        a[t]=0x55aa55aa;
+        // optimizer will remove one... though the second may produce warning
+        if (sizeof(long) == 4) {
+            a[t]=0x55aa55aa;
+        } 
+        if (sizeof(long) == 8 ){
+            a[t]=0x55aa55aa55aa55aa;
+        }
     }
     return a;
 }
@@ -197,6 +186,7 @@ double worker(unsigned long long asize, long *a, long *b, int type, unsigned lon
     struct timeval starttime, endtime;
     double te;
     unsigned int long_size=sizeof(long);
+    unsigned long long asize_bytes = asize * long_size;
     /* array size in bytes */
     unsigned long long array_bytes=asize*long_size;
 
@@ -232,14 +222,14 @@ double worker(unsigned long long asize, long *a, long *b, int type, unsigned lon
 #ifdef __AVX128__
     else if(type==TEST_MEMCPY128) { /* SSE/AVX 128 bit */
         gettimeofday(&starttime, NULL);
-        copy_data_128(b,a, asize);
+        copy_data_128(b,a, asize_bytes);
         gettimeofday(&endtime, NULL);
     } 
 #endif
 #ifdef __AVX256__
     else if(type==TEST_MEMCPY256) { /* AVX2 256 bit */
         gettimeofday(&starttime, NULL);
-        mc32nt4p_s(b,a, asize * sizeof(unsigned long long));
+        mc32nt4p_s(b,a, asize_bytes );
         gettimeofday(&endtime, NULL);
     }
 #endif
@@ -282,13 +272,13 @@ void printout(double te, double mt, int testno)
     return;
 }
 
-int worker_thread(void *v) {
+thrdret_t worker_thread(void *v) {
     struct worker_params * params = (struct worker_params *)v;
     long *a, *b; /* the two arrays to be copied from/to */
     unsigned long testno;
     int i;
     double te, te_sum; /* time elapsed */
-    
+
     a=make_array( params->asize );
     b=make_array( params->asize );
 
@@ -323,7 +313,9 @@ int worker_thread(void *v) {
 
     free(a);
     free(b);
+#if defined (__MSVCRT__) && !defined(USE_BEGIN_THREAD)
     return 0;
+#endif    
 }
 
 /* ------------------------------------------------------ */
@@ -375,6 +367,12 @@ int main(int argc, char **argv)
                     printf("Error: test number must be between 0 and %d\n", MAX_TESTS-1);
                     exit(1);
                 }
+#ifndef __AVX128__
+                if (testno == TEST_MEMCPY128) {
+                    printf("Error: test number %d not implemented yet\n", TEST_MEMCPY128);
+                    exit(1);
+                }
+#endif
                 tests[testno]=1;
                 break;
             case 't': /* number of threeads */
@@ -446,7 +444,7 @@ int main(int argc, char **argv)
     /* check if we can fit into available free memory. 
        For measurements one thead requires 2 arays of mt MiB size. 
     */
-    mem_avail_mib = (sysconf(_SC_AVPHYS_PAGES)*sysconf(_SC_PAGESIZE))/(1024*1024);
+    mem_avail_mib = get_availalbe_memory() /(1024*1024);
     mem_required_mib = 2 * mt * num_threads;
     if ( (mem_required_mib > mem_avail_mib) && (!force_mem) ) {
         printf("Error: You need %ld MiB for measurements but only (%ld MiB) as available. Use -f to override\n", mem_required_mib, mem_avail_mib);
@@ -455,13 +453,7 @@ int main(int argc, char **argv)
 
     if(verbose) {
         printf("Long uses %d bytes.\n", long_size);
-#ifdef __AVX128__         
-        printf("sizeof(__m128i) %ld bytes\n", sizeof(__m128i) );
-#endif        
-#ifdef __AVX256__         
-        printf("sizeof(__m256i) %ld bytes\n", sizeof(__m256i) );
-#endif        
-        printf("Will start %d threads. ", num_threads);
+        printf("Will start %d threads.\n", num_threads);
         printf("Allocating 2*%lld elements = %lld bytes of memory per worker thread.\n", asize, 2*asize*long_size);
         if(tests[2]) {
             printf("Using %lld bytes as blocks for memcpy block copy test.\n", block_size);

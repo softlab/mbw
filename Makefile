@@ -1,19 +1,26 @@
-#CFLAGS=-O2 -Wall -g
+.PHONY: all
+
 NAME=mbw
 TARFILE=${NAME}.tar.gz
+CC=gcc
+
+CF=
+OPT=-O3 -Ofast 
+DEFS=-D__AVX256__
 
 .s.o:
 	$(CC) -c -o $@ $<
 
 .c.o:
-	$(CC) -c -O3 -Ofast -D__AVX128__ -D__AVX256__ -o $@ $<
+	$(CC) $(CF) $(OPT) $(DEFS) -c -o $@ $<
 
-mbw: mbw.o mc32nt4p_s.o
+$(NAME): mbw.o memavail.o mc32nt4p_s.o
 	$(CC) -o $@ $^
 
 clean:
-	rm -f mbw
-	rm -f ${NAME}.tar.gz
+	-rm -f *.o
+	-rm -f ${NAME}
+	-rm -f ${NAME}.tar.gz
 
 ${TARFILE}: clean
 	 tar cCzf .. ${NAME}.tar.gz --exclude-vcs ${NAME} || true
